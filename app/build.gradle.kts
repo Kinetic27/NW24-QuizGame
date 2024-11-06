@@ -9,7 +9,7 @@ android {
     defaultConfig {
         applicationId = "kr.co.gachon.kinetic27.nw24_quizgame"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
