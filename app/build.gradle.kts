@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace = "kr.co.gachon.kinetic27.nw24_quizgame"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "kr.co.gachon.kinetic27.nw24_quizgame"
@@ -37,6 +37,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation(libs.core.splashscreen)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
