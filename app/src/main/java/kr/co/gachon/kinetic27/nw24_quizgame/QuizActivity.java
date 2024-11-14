@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.TextView;
@@ -107,7 +106,7 @@ public class QuizActivity extends AppCompatActivity {
                 Log.e("QuizActivity", Objects.requireNonNull(e.getMessage()));
                 Log.e("QuizActivity", "Server Not Ready");
 
-                runOnUiThread(() -> { Toast.makeText(this, "Server Not Ready", Toast.LENGTH_SHORT).show(); });
+                runOnUiThread(() -> Toast.makeText(this, "Server Not Ready", Toast.LENGTH_SHORT).show());
                 finish();
             }
         }).start();
