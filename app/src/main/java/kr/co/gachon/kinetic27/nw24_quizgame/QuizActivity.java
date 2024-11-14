@@ -1,13 +1,17 @@
 package kr.co.gachon.kinetic27.nw24_quizgame;
 
+import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.RequiresApi;
@@ -31,8 +35,7 @@ public class QuizActivity extends AppCompatActivity {
     BufferedReader in;
     PrintWriter out;
 
-    TextView quizText, answerText;
-
+    TextView quizText, quizLengthText, answerText;
 
     @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     @Override
@@ -48,86 +51,80 @@ public class QuizActivity extends AppCompatActivity {
         });
 
         quizText = findViewById(R.id.quiz_text);
+        quizLengthText = findViewById(R.id.quiz_text_size);
         answerText = findViewById(R.id.answer_text);
 
-        String[] ipAndPort = readIpAndPortFromFile("server_info.dat");
-
-        String ip = ipAndPort[0];
-        int port = Integer.parseInt(ipAndPort[1]);
+        Intent intent = getIntent();
+        String ip = intent.getStringExtra("ip");
+        int port = intent.getIntExtra("port", 1234);
 
         Log.i("ip, port", ip + ", " + port);
-
 
         Button submitButton = findViewById(R.id.submit_button);
 
         // connect to server
-        new Thread(() -> {
-            openSocket(ip, port);
-        }).start();
+        openSocket(ip, port);
 
         submitButton.setOnClickListener(v -> {
             String answer = answerText.getText().toString();
             Log.i("answer", answer);
+
             if (!answer.isEmpty()) {
                 String encoded_answer = URLEncoder.encode(answer, StandardCharsets.UTF_8);
                 Log.i("answer", encoded_answer);
 
+                InputMethodManager manager = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
+                manager.hideSoftInputFromWindow(Objects.requireNonNull(getCurrentFocus()).getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+
                 new Thread(() -> {
                     out.println("q_answer:" + encoded_answer);
-                    readServer();
+
+                    readLineFromServer();
                 }).start();
             }
         });
 
-        answerText.setOnKeyListener(new View.OnKeyListener() {
-            @Override
-            public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if (keyCode == KeyEvent.KEYCODE_ENTER) {
-                    submitButton.callOnClick();
-                }
-
-                return false;
+        answerText.setOnKeyListener((v, keyCode, event) -> {
+            if (keyCode == KeyEvent.KEYCODE_ENTER) {
+                submitButton.callOnClick();
             }
+
+            return false;
         });
     }
 
-
-    public String[] readIpAndPortFromFile(String filePath) {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(getAssets().open(filePath)))) {
-            String ip = br.readLine();
-            String port = br.readLine();
-
-            return new String[]{ip, port};
-        } catch (IOException | NumberFormatException e) {
-            return new String[]{"localhost", "1234"};
-        }
-    }
-
     public void openSocket(String ip, int port) {
-        try {
-            // noinspection resource
-            Socket clientSocket = new Socket(ip, port);
+        new Thread(() -> {
+            try {
+                // noinspection resource
+                Socket clientSocket = new Socket(ip, port);
 
-            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            out = new PrintWriter(clientSocket.getOutputStream(), true);
+                in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                out = new PrintWriter(clientSocket.getOutputStream(), true);
 
-            readServer();
-        } catch (IOException e) {
-            Log.i("QuizActivity", Objects.requireNonNull(e.getMessage()));
-            Log.i("QuizActivity", "Server Not Ready");
+                readLineFromServer();
+            } catch (IOException e) {
+                Log.e("QuizActivity", Objects.requireNonNull(e.getMessage()));
+                Log.e("QuizActivity", "Server Not Ready");
 
-            finish();
-        }
+                runOnUiThread(() -> { Toast.makeText(this, "Server Not Ready", Toast.LENGTH_SHORT).show(); });
+                finish();
+            }
+        }).start();
     }
 
-    public void readServer() {
+    @SuppressLint("SetTextI18n")
+    public void readLineFromServer() {
         try {
             String serverMsg = in.readLine();
 
             if (serverMsg.startsWith("quiz:")) {
                 String[] quiz = serverMsg.split(":");
-                runOnUiThread(() -> quizText.setText(quiz[1]));
-                // Integer.parseInt(quiz[2])
+
+                runOnUiThread(() -> {
+                    quizText.setText(quiz[1]);
+                    quizLengthText.setText(quiz[2] + "글자");
+                });
             }
 
             // if server send answer is correct
@@ -142,34 +139,37 @@ public class QuizActivity extends AppCompatActivity {
                     }
 
                     answerText.setText("");
-                    readServer();
                 });
+
+                // call recursively
+                readLineFromServer();
             }
 
             // if server message is show score
             if (serverMsg.startsWith("score:")) {
                 int score = Integer.parseInt(serverMsg.split(":")[1]);
 
-
                 runOnUiThread(() -> {
                     findViewById(R.id.submit_button).setEnabled(false);
+                    answerText.setEnabled(false);
+
+                    quizText.setText(score + "점 입니다!");
+                    quizLengthText.setText("수고하셨습니다.");
 
                     new Handler().postDelayed(() -> {
                         Snackbar.make(findViewById(R.id.quiz_main),
                                 "최종 점수는 " + score + "점 입니다.", Snackbar.LENGTH_SHORT
                         ).show();
 
-                        new Handler().postDelayed(this::finish, 1200);
+                        new Handler().postDelayed(QuizActivity.this::finish, 1200);
                     }, 1000);
                 });
-                // 결과창 이동
-                //                clientSocket.close();
             }
         } catch (IOException e) {
             Log.e("QuizActivity", Objects.requireNonNull(e.getMessage()));
             Log.e("QuizActivity", "Server Error");
 
-            finish();
+            QuizActivity.this.finish();
         }
     }
 }

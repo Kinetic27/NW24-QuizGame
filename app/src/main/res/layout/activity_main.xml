@@ -5,8 +5,48 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_marginStart="60dp"
+    android:layout_marginEnd="60dp"
     tools:context=".MainActivity">
 
+    <TextView
+        android:id="@+id/titleText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="가천대 퀴즈!!"
+        android:textSize="50sp"
+        android:textAlignment="center"
+        app:layout_constraintBottom_toTopOf="@+id/edittextWrapper"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/edittextWrapper"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@+id/startButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/titleText">
+
+        <EditText
+            android:id="@+id/ip_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:autofillHints="quizanswer"
+            android:hint="서버 아이피 정보를 입력해주세요.\nex) 192.168.0.1"
+            android:inputType="numberDecimal"
+            android:singleLine="true"
+            android:layout_marginBottom="20dp"/>
+        <EditText
+            android:id="@+id/port_text"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:autofillHints="quizanswer"
+            android:hint="포트 정보를 입력해주세요.\nex) 8000"
+            android:inputType="number"
+            android:singleLine="true" />
+    </LinearLayout>
 
     <Button
         android:id="@+id/startButton"
@@ -20,7 +60,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/edittextWrapper" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
