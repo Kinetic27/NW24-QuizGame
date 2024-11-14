@@ -65,7 +65,7 @@ public class QuizActivity extends AppCompatActivity {
         openSocket(ip, port);
 
         submitButton.setOnClickListener(v -> {
-            String answer = answerText.getText().toString();
+            String answer = answerText.getText().toString().trim();
             Log.i("answer", answer);
 
             if (!answer.isEmpty()) {
@@ -168,6 +168,7 @@ public class QuizActivity extends AppCompatActivity {
             Log.e("QuizActivity", Objects.requireNonNull(e.getMessage()));
             Log.e("QuizActivity", "Server Error");
 
+            runOnUiThread(() -> Toast.makeText(this, "Server Error", Toast.LENGTH_SHORT).show());
             QuizActivity.this.finish();
         }
     }
